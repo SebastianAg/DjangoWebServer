@@ -1,0 +1,14 @@
+cd my_project
+python manage.py runserver ip-address:8000
+python manage.py migrate
+
+ifconfig to find ip
+	if ethernet Eth0
+	if eduroam Wlan0
+
+
+
+superuser
+sebpi3
+sebastian.agfemalm96@hotmail.se
+Hgotaa123

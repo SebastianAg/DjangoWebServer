@@ -1,0 +1,29 @@
+class Route(models.Model):
+	path = models.CharField('Route', max_length=200)
+	
+	def __str__(self):
+		return self.path
+	
+class UploadedTextFile(models.Model):
+	file = models.FileField(upload_to='/home/SebPi3/DjangoWebServer-main/my_project'
+
+
+def addRoute(request):
+    file_path = os.path.join(settings.BASE_DIR, '/home/SebPi3/DjangoWebServer-main/my_project/testfile.txt')
+    if os.path.exists(file_path):
+	with open(file_path, 'rb') as f:
+	    new_file = UploadedTextFile(file=f)
+	    new_file.save()
+	    return HttpResponse('')
+
+forms.py
+from django import forms
+from django.forms import ModelForm
+from .models import Route
+
+#data form
+class RouteForm(ModelForm):
+	class Meta:
+		model = Route
+		fields = "__all__"
+		

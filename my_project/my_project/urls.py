@@ -22,4 +22,7 @@ from androidApp import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path(r'^run/$', views.run),
+    re_path(r'^upload/$', views.upload),
+    re_path(r'^text/$', views.text, name='text'),
+    re_path(r'^data/$', views.all_data, name='data'),
 ]

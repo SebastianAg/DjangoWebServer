@@ -10,6 +10,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Data
 from django.forms.models import model_to_dict
+import socket
+#from androidApp.merchfile import set_command
 
 # Create your views here.
 
@@ -18,12 +20,24 @@ def run(request):
         action = request.GET['action']
 	    #Start button
         if action == 'start':
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect(('localhost',8080))
             print("start")
+            
+            s.send('start'.encode())
+            #print(s.decode('utf-8'))
+            s.close()
         #stop button
         elif action == 'stop':
             print("stop")
+            #s = socket.socket()
+            #s.connect(('localhost',8080))
+            
         #send button
         elif action == 'send':
+            #s = socket.socket()
+            #s.connect(('localhost',8080))
+            
             print("send")
     return HttpResponse('')
 

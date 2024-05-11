@@ -23,15 +23,17 @@ def run(request):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(('localhost',8080))
             print("start")
-            
             s.send('start'.encode())
             #print(s.decode('utf-8'))
             s.close()
         #stop button
         elif action == 'stop':
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect(('localhost',8080))
             print("stop")
-            #s = socket.socket()
-            #s.connect(('localhost',8080))
+            s.send('stop'.encode())
+            #print(s.decode('utf-8'))
+            s.close()
             
         #send button
         elif action == 'send':
@@ -39,6 +41,14 @@ def run(request):
             #s.connect(('localhost',8080))
             
             print("send")
+	    
+        elif action == 'record':
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect(('localhost',8080))
+            print("record")
+            s.send('record'.encode())
+            #print(s.decode('utf-8'))
+            s.close()
     return HttpResponse('')
 
 def upload(request):

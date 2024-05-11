@@ -1,3 +1,4 @@
+cd DjangoWebServer-main
 cd my_project
 python manage.py runserver ip-address:8000
 python manage.py migrate
@@ -12,3 +13,6 @@ superuser
 sebpi3
 sebastian.agfemalm96@hotmail.se
 Hgotaa123
+
+Tx är grå
+Rx är röd

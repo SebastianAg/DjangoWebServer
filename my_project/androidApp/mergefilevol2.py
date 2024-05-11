@@ -44,13 +44,15 @@ Both motors in non motion state
 dir_to_pico = [] #time and direction array
 
 def set_command(data):
-    if data == 'start':
+    if data == 'record':
         #send M to pico for mapping
+        uart.write(str.encode('M'))
         return 0
     elif data == 'stop':
+        uart.write(str.encode('S'))
         #send S to pico for stop
         return 3
-    elif data == 'step':
+    elif data == 'start':
         #use stored map for direction to pico
         return 1
 
@@ -110,7 +112,7 @@ def read_uart_file():
     dir_motor = array.array('u',[' ',' '])
     int_time2 = 0 
     while loop:
-        with open("/home/jakob/DjangoWebServer-main/my_project/androidApp/myfile.txt") as file:
+        with open("/home/SebPi3/DjangoWebServer-main/my_project/androidApp/myfile.txt") as file:
             for item in file:
                 var_time = str()
                 dir_to_pico = array.array('q', [0]*len(item)) #construct an array of zeros in size of the data
@@ -187,20 +189,28 @@ def write_dir_command(direction):
 serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serv.bind(('localhost',8080))
 serv.listen(5)
+condition = 4
 while True:
     c, addr = serv.accept() #accepts communication socket
     data = c.recv(4096).decode() #recives data through socket and saves it
     print(data)
     c.close() #close the connection
-    buffer = uart.in_waiting 		#checks if something is waiting in the buffer
-    if set_command(data) == 0:
-        if buffer > 0:					#if more then zero bytes in buffer
-            data = uart.read(1)			#reads Rx buffer
-            data = data.decode('utf_8')	#change format
-            file = open("/home/jakob/DjangoWebServer-main/my_project/androidApp/myfile.txt", "a")
-            if data.isdigit():
-                file.write(data)       
-            elif data == 'U' or data == 'J':
+    if set_command(data) == 0 or set_command(data) == 1 or set_command(data) == 3:
+        condition = set_command(data)
+    print(condition)
+    if condition == 0:
+        time.sleep(5)
+        buffer = uart.in_waiting 		#checks if something is waiting in the buffer
+        #print(buffer)
+        while uart.in_waiting >= 0:					#if more then zero bytes in buffer
+            print('test2')
+            e_data = uart.read(1)			#reads Rx buffer
+            #e_data = e_data.decode('utf_8')	#change format
+            print(e_data)
+            file = open("/home/SebPi3/DjangoWebServer-main/my_project/androidApp/myfile.txt", "a")
+            if e_data.isdigit():
+                file.write(e_data)       
+            elif e_data == 'U' or e_data == 'J':
                 #ultrasounds flags
                 #retrieve information of position using localisation tools
                 #send solutions to pico
@@ -208,15 +218,18 @@ while True:
                 Alternativ för lösning, vid flagga, så hämtas information om senaste positionering från karta
                 """
                 pass
-            elif data == 'A' or data == 'E' or data == 'G' or data == 'K':
-                file.write(data)
-            elif data == 'X':
-                file.write(data)
+            elif e_data == 'A' or e_data == 'E' or e_data == 'G' or e_data == 'K':
+                file.write(e_data)
+            elif e_data == 'X':
+                file.write(e_data)
             else:
                 file.write('B') #byte error message
                 file.close()
-    elif set_command(data) == 1:
+        else:
+            pass
+    elif condition == 1:
         array = read_uart_file()
+        print(array)
         for i in range(len(array)):
             if i == 0:
                 start = array[i+1]
@@ -225,22 +238,26 @@ while True:
             elif i%2 == 1:
                 direction = array[i]
                 if direction == 0: #first element in array is always 0
-                    break
-                stop_time = array[i+1]  
-                tic = time.perf_counter()
-                while int(time.perf_counter()) < tic + stop_time:
-                    if buffer > 0:
-                        data = uart.read(1)
-                        if data == 'U' or data == 'J': #check for ultrasound flags
-                            pass
-                        else: #check for shutdown message
-                            pass
                     pass
+                else:
+                    stop_time = array[i+1]  
+                    tic = time.perf_counter()
+                    print(stop_time)
+                    while float(time.perf_counter()) < tic + stop_time:
+                        if buffer > 0:
+                            e_data = uart.read(1)
+                            if e_data == 'U' or e_data == 'J': #check for ultrasound flags
+                                print('ultra')
+                                write_dir_sommand(3)
+                                pass
+                            else: #check for shutdown message
+                                pass
+                        pass
                 write_dir_command(direction)
             else:
                 pass
-    elif set_command(data) == 3:
-        write_dir_sommand(3) #send stop command to pico
+    elif condition == 3:
+        write_dir_command(3) #send stop command to pico
         
         
 

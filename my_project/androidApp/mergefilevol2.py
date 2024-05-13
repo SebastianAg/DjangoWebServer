@@ -42,7 +42,7 @@ Both motors in non motion state
 """
 
 dir_to_pico = [] #time and direction array
-
+ 
 def set_command(data):
     if data == 'record':
         #send M to pico for mapping
@@ -119,9 +119,11 @@ def read_uart_file():
                 for i in range(len(item)):
                     if item[i].isdigit():
                         var_time = var_time + item[i]
-                    elif item[i] == 'A' or item[i] == 'E':   
                         int_time2 = save_time(var_time, int_time2)
-                        dir_motor[ 0] = item[i]
+                        print(var_time)
+                    elif item[i] == 'A' or item[i] == 'E':   
+                        #int_time2 = save_time(var_time, int_time2)
+                        dir_motor[0] = item[i]
                         dir_time[0] = int_time2
                         idx += 1
                         if idx == 2:
@@ -133,7 +135,7 @@ def read_uart_file():
                         var_time = ""
                         int_time2 = 0
                     elif item[i] == 'G' or item[i] == 'K':
-                        int_time2 = save_time(var_time, int_time2)
+                        #int_time2 = save_time(var_time, int_time2)
                         dir_motor[1] = item[i]
                         dir_time[1] = int_time2
                         idx += 1
@@ -146,6 +148,8 @@ def read_uart_file():
                         var_time = ""
                         int_time2 = 0
                     elif item[i] == 'X': #ändra till S? JENNIE
+                        dir_time[1] = int_time2
+                        create_byte(dir_motor, dir_time, idx_p, dir_to_pico)
                         #stop indicator
                         loop = False
                     else:
@@ -162,20 +166,20 @@ def read_uart_file():
 # For every command a stop command are send throught UART to pico,
 # so that you get more control over the motion
 #####################################################################
-def write_dir_command(direction):
+def write_dir_command(direction, stop_time):
     uart.write(str.encode('S'))
     if direction == 5:
         uart.write(str.encode('F'))
-        #pass
+        uart.write(str.encode(str(stop_time)))
     elif direction == 4:
         uart.write(str.encode('R'))
-        #pass
+        uart.write(str.encode(str(stop_time)))
     elif direction == 6:
         uart.write(str.encode('B'))
-        #pass
+        uart.write(str.encode(str(stop_time)))
     elif direction == 2:
         uart.write(str.encode('L'))
-        #pass
+        uart.write(str.encode(str(stop_time)))
     else:
         pass
 
@@ -193,20 +197,20 @@ condition = 4
 while True:
     c, addr = serv.accept() #accepts communication socket
     data = c.recv(4096).decode() #recives data through socket and saves it
-    print(data)
+    #print(data)
     c.close() #close the connection
     if set_command(data) == 0 or set_command(data) == 1 or set_command(data) == 3:
         condition = set_command(data)
-    print(condition)
-    if condition == 0:
+    #print(condition)
+    if condition == 0: #0 - record
         time.sleep(5)
         buffer = uart.in_waiting 		#checks if something is waiting in the buffer
         #print(buffer)
         while uart.in_waiting >= 0:					#if more then zero bytes in buffer
-            print('test2')
+            #print('test2')
             e_data = uart.read(1)			#reads Rx buffer
-            #e_data = e_data.decode('utf_8')	#change format
-            print(e_data)
+            e_data = e_data.decode('utf_8')	#change format
+            #print(e_data)
             file = open("/home/SebPi3/DjangoWebServer-main/my_project/androidApp/myfile.txt", "a")
             if e_data.isdigit():
                 file.write(e_data)       
@@ -227,14 +231,14 @@ while True:
                 file.close()
         else:
             pass
-    elif condition == 1:
+    elif condition == 1: #1 - start
         array = read_uart_file()
         print(array)
         for i in range(len(array)):
             if i == 0:
                 start = array[i+1]
-                write_dir_command(start) # Sends start direction
-                print('begins')
+                write_dir_command(start,0) # Sends start direction
+                #print('begins')
             elif i%2 == 1:
                 direction = array[i]
                 if direction == 0: #first element in array is always 0
@@ -242,22 +246,25 @@ while True:
                 else:
                     stop_time = array[i+1]  
                     tic = time.perf_counter()
-                    print(stop_time)
+                    """
                     while float(time.perf_counter()) < tic + stop_time:
+                        buffer = uart.in_waiting
                         if buffer > 0:
                             e_data = uart.read(1)
                             if e_data == 'U' or e_data == 'J': #check for ultrasound flags
                                 print('ultra')
-                                write_dir_sommand(3)
+                                write_dir_command(3)
                                 pass
                             else: #check for shutdown message
                                 pass
                         pass
-                write_dir_command(direction)
+                    """
+                print(direction, stop_time)
+                write_dir_command(direction, stop_time)
             else:
                 pass
-    elif condition == 3:
-        write_dir_command(3) #send stop command to pico
+    elif condition == 3: #3 - stop
+        write_dir_command(3,0) #send stop command to pico
         
         
 
